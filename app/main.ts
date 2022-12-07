@@ -11,8 +11,21 @@ async function handler(req: Request): Promise<Response> {
 
   if (url === "/" && method === "POST") {
     const { cultura, regiao } = body;
+    if (!cultura || !regiao) {
+      return new Response(JSON.stringify({ message: 'Preencha os campos de cultura e região' }), { 
+        status: 400, 
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+        },
+      });
+    }
     const [calendarioCultivo] = await sql`SELECT id, epoca_plantio, dias_cultivo FROM agro.cultura_regiao cr INNER JOIN agro.cultura c ON c.nome = cr.cultura WHERE cr.cultura = ${cultura} AND regiao = ${regiao}`;
-
+    if (!calendarioCultivo) return new Response(JSON.stringify({ message: 'Cultura não encontrada' }), { 
+      status: 404, 
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+      },
+    });
     return new Response(JSON.stringify(calendarioCultivo), {
       status: 200,
       headers: {
@@ -20,7 +33,6 @@ async function handler(req: Request): Promise<Response> {
       },
     });
   }
-
   return new Response(JSON.stringify({ message: "NOT FOUND" }), {
     status: 404,
     headers: {
